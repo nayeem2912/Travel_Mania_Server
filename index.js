@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors());
 app.use(express.json());
 
@@ -24,6 +24,36 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    const database = client.db('travel_mania')
+    const packageCollection = database.collection('package')
+
+
+    app.get('/package', async(req, res) => {
+      const {searchParams} = req.query;
+
+    let query = {}
+
+    if(searchParams){
+      query= {tour_name: {$regex: searchParams, $options: "i"   }}
+    }
+
+      const allPackage = await packageCollection.find(query).toArray()
+      res.send(allPackage)
+    })
+
+    app.get('/package/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await packageCollection.findOne(query);
+            res.send(result);
+        })
+
+
+    app.post('/addPackage', async(req, res) => {
+      const packageData = req.body;
+      const result = await packageCollection.insertOne(packageData)
+      res.send(result)
+    })
    
     await client.connect();
    

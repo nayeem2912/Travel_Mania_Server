@@ -26,6 +26,7 @@ async function run() {
   try {
     const database = client.db('travel_mania')
     const packageCollection = database.collection('package')
+    const bookingCollection = database.collection('booking')
 
 
     app.get('/package', async(req, res) => {
@@ -41,6 +42,21 @@ async function run() {
       res.send(allPackage)
     })
 
+    app.get('/my-package/:email', async (req, res) => {
+      const email = req.params.email
+      const filter = { email }
+      const package = await packageCollection.find(filter).toArray()
+      res.send(package)
+    })
+
+     app.get("/feature", async (req, res) => {
+      const latest = await packageCollection.find()
+        .sort({ _id: -1 })
+        .limit(6)
+        .toArray();
+      res.send(latest);
+    });
+
     app.get('/package/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -48,12 +64,40 @@ async function run() {
             res.send(result);
         })
 
+        app.post('/bookNow', async(req, res) => {
+      const bookingData = req.body;
+      const result = await bookingCollection.insertOne(bookingData)
+      res.send(result)
+    })
+
 
     app.post('/addPackage', async(req, res) => {
       const packageData = req.body;
       const result = await packageCollection.insertOne(packageData)
       res.send(result)
     })
+
+    app.put('/updatePackage/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const options = { upsert: true };
+            const updatedPackage = req.body;
+            const updatedInfo = {
+                $set: updatedPackage
+            }
+
+            
+              const result = await packageCollection.updateOne(filter, updatedInfo, options);
+
+            res.send(result);
+        })
+
+         app.delete('/package/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await packageCollection.deleteOne(query);
+            res.send(result);
+        })
    
     await client.connect();
    

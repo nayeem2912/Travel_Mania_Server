@@ -107,6 +107,22 @@ async function run() {
             const result = await packageCollection.deleteOne(query);
             res.send(result);
         })
+
+
+        app.patch('/my-booking/:id/confirm', async (req, res) => {
+           const { id } = req.params;
+             const updateBook = await bookingCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: "Confirmed" } }
+    );
+
+    if (updateBook.modifiedCount > 0) {
+    res.send({ success: true});
+  } else {
+    res.send({ success: false });
+  }
+
+        })
    
     await client.connect();
    

@@ -56,6 +56,15 @@ async function run() {
         .toArray();
       res.send(latest);
     });
+      
+
+    app.get('/my-booking/:email', async (req, res) => {
+      const email = req.params.email
+      const filter = { email }
+      const booking = await bookingCollection.find(filter).toArray()
+      res.send(booking)
+    })
+
 
     app.get('/package/:id', async (req, res) => {
             const id = req.params.id;

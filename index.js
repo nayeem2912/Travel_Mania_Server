@@ -75,8 +75,18 @@ async function run() {
 
         app.post('/bookNow', async(req, res) => {
       const bookingData = req.body;
+      const packageId = bookingData.packageId;
       const result = await bookingCollection.insertOne(bookingData)
-      res.send(result)
+      const updateResult = await packageCollection.updateOne(
+      { _id: new ObjectId(String(packageId)) },
+      { $inc: { booking_Count: +1 } }
+    );
+
+     res.send({
+      success: true,
+      bookingId: result.insertedId,
+      bookingCountUpdated: updateResult.modifiedCount === +1
+    });
     })
 
 

@@ -2,11 +2,18 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
+
+
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors());
 app.use(express.json());
 
 const port = process.env.PORT || 3000;
+
+
+
+
 
 
 
@@ -21,6 +28,13 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+
+
+
+
+
+
 
 async function run() {
   try {
@@ -42,8 +56,9 @@ async function run() {
       res.send(allPackage)
     })
 
-    app.get('/my-package/:email', async (req, res) => {
-      const email = req.params.email
+    app.get('/my-package/:email' ,async (req, res) => {
+      const email = req.params.email;
+      
       const filter = { email }
       const package = await packageCollection.find(filter).toArray()
       res.send(package)
@@ -59,7 +74,8 @@ async function run() {
       
 
     app.get('/my-booking/:email', async (req, res) => {
-      const email = req.params.email
+      const email = req.params.email;
+
       const filter = { email }
       const booking = await bookingCollection.find(filter).toArray()
       res.send(booking)

@@ -2,9 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
-
-
-
+var admin = require("firebase-admin");
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf-8')
+var serviceAccount = JSON.parse(decoded)
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors());
 app.use(express.json());
@@ -29,10 +29,30 @@ const client = new MongoClient(uri, {
   }
 });
 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 
+const verifyFireBaseToken = async (req, res, next) => {
+  const authHeader = req.headers?.authorization;
 
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send({ message: 'unauthorized access' })
+  }
 
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(token);
+    console.log('decoded token', decoded);
+    req.decoded = decoded;
+    next();
+  }
+  catch (error) {
+    return res.status(401).send({ message: 'unauthorized access' })
+  }
+}
 
 
 
@@ -56,7 +76,7 @@ async function run() {
       res.send(allPackage)
     })
 
-    app.get('/my-package/:email' ,async (req, res) => {
+    app.get('/my-package/:email', verifyFireBaseToken ,async (req, res) => {
       const email = req.params.email;
       
       const filter = { email }
@@ -73,7 +93,7 @@ async function run() {
     });
       
 
-    app.get('/my-booking/:email', async (req, res) => {
+    app.get('/my-booking/:email', verifyFireBaseToken ,async (req, res) => {
       const email = req.params.email;
 
       const filter = { email }
@@ -82,14 +102,14 @@ async function run() {
     })
 
 
-    app.get('/package/:id', async (req, res) => {
+    app.get('/package/:id',verifyFireBaseToken ,async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await packageCollection.findOne(query);
             res.send(result);
         })
 
-        app.post('/bookNow', async(req, res) => {
+        app.post('/bookNow',verifyFireBaseToken ,async(req, res) => {
       const bookingData = req.body;
       const packageId = bookingData.packageId;
       const result = await bookingCollection.insertOne(bookingData)
@@ -106,13 +126,13 @@ async function run() {
     })
 
 
-    app.post('/addPackage', async(req, res) => {
+    app.post('/addPackage',verifyFireBaseToken ,async(req, res) => {
       const packageData = req.body;
       const result = await packageCollection.insertOne(packageData)
       res.send(result)
     })
 
-    app.put('/updatePackage/:id', async (req, res) => {
+    app.put('/updatePackage/:id',verifyFireBaseToken ,async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
             const options = { upsert: true };

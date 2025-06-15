@@ -6,6 +6,9 @@ var admin = require("firebase-admin");
 const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf-8')
 var serviceAccount = JSON.parse(decoded)
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 app.use(cors(
   {
     origin: ["http://localhost:5173", "https://travel-mania-nayeem129.netlify.app"], 
@@ -34,9 +37,7 @@ const client = new MongoClient(uri, {
   }
 });
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+
 
 
 const verifyFireBaseToken = async (req, res, next) => {

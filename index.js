@@ -6,7 +6,12 @@ var admin = require("firebase-admin");
 const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf-8')
 var serviceAccount = JSON.parse(decoded)
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-app.use(cors());
+app.use(cors(
+  {
+    origin: ["http://localhost:5173", "https://travel-mania-nayeem129.netlify.app"], 
+    credentials: true,
+  }
+));
 app.use(express.json());
 
 const port = process.env.PORT || 3000;

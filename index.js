@@ -93,7 +93,7 @@ async function run() {
      app.get("/feature", async (req, res) => {
       const latest = await packageCollection.find()
         .sort({ _id: -1 })
-        .limit(6)
+        .limit(8)
         .toArray();
       res.send(latest);
     });

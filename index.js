@@ -69,18 +69,48 @@ async function run() {
     const bookingCollection = database.collection('booking')
 
 
-    app.get('/package', async(req, res) => {
-      const {searchParams} = req.query;
+    // app.get('/package', async(req, res) => {
+    //   const {searchParams} = req.query;
 
-    let query = {}
+    // let query = {}
 
-    if(searchParams){
-      query= {tour_name: {$regex: searchParams, $options: "i"   }}
-    }
+    // if(searchParams){
+    //   query= {tour_name: {$regex: searchParams, $options: "i"   }}
+    // }
 
-      const allPackage = await packageCollection.find(query).toArray()
-      res.send(allPackage)
-    })
+    //   const allPackage = await packageCollection.find(query).toArray()
+    //   res.send(allPackage)
+    // })
+
+    app.get('/package', async (req, res) => {
+  const { searchParams, sort } = req.query;
+
+  let query = {};
+
+  // Search by tour name
+  if (searchParams) {
+    query = { tour_name: { $regex: searchParams, $options: "i" } };
+  }
+
+  // Default sort order
+  let sortOption = {};
+
+  // Sorting by price
+  if (sort === 'asc') {
+    sortOption = { price: 1 }; // ascending
+  } else if (sort === 'desc') {
+    sortOption = { price: -1 }; // descending
+  }
+
+  // Fetch packages with optional search & sorting
+  const allPackage = await packageCollection
+    .find(query)
+    .sort(sortOption)
+    .toArray();
+
+  res.send(allPackage);
+});
+
 
     app.get('/my-package/:email', verifyFireBaseToken ,async (req, res) => {
       const email = req.params.email;

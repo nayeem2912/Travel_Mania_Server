@@ -82,29 +82,27 @@ async function run() {
     //   res.send(allPackage)
     // })
 
-    app.get('/package', async (req, res) => {
-  const { searchParams, sort } = req.query;
-  let query = {};
+   app.get('/package', async (req, res) => {
+  const search = req.query.search || '';
+  const sort = req.query.sort === 'desc' ? -1 : 1; // default asc
 
-  if (searchParams) {
-    query = { tour_name: { $regex: searchParams, $options: "i" } };
-  }
+  const allPackage = await packageCollection
+    .find({
+      name: { $regex: search, $options: 'i' }
+    })
+    .toArray();
 
-  let sortOption = {};
-  if (sort === 'asc') {
-    sortOption = { price: 1 };
-  } else if (sort === 'desc') {
-    sortOption = { price: -1 };
-  }
+  // price string → number convert করে sort করা
+  allPackage.forEach(pkg => {
+    pkg.price = Number(pkg.price);
+  });
 
-  const allPackage = await packageCollection.aggregate([
-    { $match: query },
-    { $addFields: { price: { $toInt: "$price" } } }, // convert string to number
-    { $sort: sortOption }
-  ]).toArray();
+  allPackage.sort((a, b) => (a.price - b.price) * sort);
 
   res.send(allPackage);
 });
+
+
 
 
 

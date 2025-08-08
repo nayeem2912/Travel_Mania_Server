@@ -84,32 +84,28 @@ async function run() {
 
     app.get('/package', async (req, res) => {
   const { searchParams, sort } = req.query;
-
   let query = {};
 
-  // Search by tour name
   if (searchParams) {
     query = { tour_name: { $regex: searchParams, $options: "i" } };
   }
 
-  // Default sort order
   let sortOption = {};
-
-  // Sorting by price
   if (sort === 'asc') {
-    sortOption = { price: 1 }; // ascending
+    sortOption = { price: 1 };
   } else if (sort === 'desc') {
-    sortOption = { price: -1 }; // descending
+    sortOption = { price: -1 };
   }
 
-  // Fetch packages with optional search & sorting
-  const allPackage = await packageCollection
-    .find(query)
-    .sort(sortOption)
-    .toArray();
+  const allPackage = await packageCollection.aggregate([
+    { $match: query },
+    { $addFields: { price: { $toInt: "$price" } } }, // convert string to number
+    { $sort: sortOption }
+  ]).toArray();
 
   res.send(allPackage);
 });
+
 
 
     app.get('/my-package/:email', verifyFireBaseToken ,async (req, res) => {

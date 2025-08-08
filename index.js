@@ -82,25 +82,38 @@ async function run() {
     //   res.send(allPackage)
     // })
 
-   app.get('/package', async (req, res) => {
-  const search = req.query.search || '';
-  const sort = req.query.sort === 'desc' ? -1 : 1; // default asc
+  app.get('/package', async (req, res) => {
+  try {
+    const { searchParams = '', sort = 'asc' } = req.query;
 
-  const allPackage = await packageCollection
-    .find({
-      name: { $regex: search, $options: 'i' }
-    })
-    .toArray();
+    // search query
+    const matchStage = {
+      tour_name: { $regex: searchParams, $options: "i" }
+    };
 
-  // price string → number convert করে sort করা
-  allPackage.forEach(pkg => {
-    pkg.price = Number(pkg.price);
-  });
+    // sort direction
+    const sortDirection = sort === 'desc' ? -1 : 1;
 
-  allPackage.sort((a, b) => (a.price - b.price) * sort);
+    const packages = await packageCollection.aggregate([
+      { $match: matchStage },
+      { 
+        $addFields: {
+          priceNum: { $toInt: "$price" }   // string price → number priceNum
+        }
+      },
+      { $sort: { priceNum: sortDirection } },
+      { $project: { priceNum: 0 } } // hide helper field
+    ]).toArray();
 
-  res.send(allPackage);
+    res.send(packages);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'Server error' });
+  }
 });
+
+
 
 
 
